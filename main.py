@@ -1,5 +1,10 @@
 import time, sys, os, subprocess, readline
+# user config
 from user_config import username, pcname, defaultdirectory, homealias
+
+# extensions config
+from extensions_config import ext_dir, extensions_activated
+
 from colorama import Fore, Back, Style, init
 init(autoreset=True)
 # username2 = subprocess.check_output('echo $USER', shell=True, text=True)
@@ -10,7 +15,25 @@ style = Style
 version = '[SourceCode] (No version, testing right now.)'
 readline.parse_and_bind("tab: complete")
 readline.set_history_length(1000)
+# handling extensions
 
+def loadExtension(name):
+    if extensions_activated is True:
+        ext_content = ''
+
+        try:
+            with open(f'{ext_dir}/{name}/main.py', 'r') as ext:
+                ext_content = ext.read()
+            exec(ext_content)
+        except FileNotFoundError:
+            print('Extension not found')
+            pass
+        except (SyntaxError, NameError, IOError, ImportError, ValueError, Exception) as e:
+            print(f'Extension got loaded successfully but it returned an error.\n{e}')
+    else:
+        print("Extensions aren't activated.")
+
+# --------------------
 def get_last_command():
     try:
         return readline.get_history_item(readline.get_current_history_length())
@@ -59,7 +82,8 @@ exit - Exits nSH.
 ls - Returns list of items in the current directory.
 about - Returns about info.
 run - Runs a file.
-cpm - Installs a package with nSH's default package manager - Codec Package Manager. (Front-end for APT)''')
+cpm - Installs a package with nSH's default package manager - Codec Package Manager. (Front-end for APT)
+loadext - Loads an extension.''')
     elif cmd == 'clear':
         clear()
     elif cmd == 'exit':
@@ -117,6 +141,14 @@ Type 'exit' to exit NTE.
                 run(f'sudo apt-get remove {package_name}')
             elif args[1] == '-p':
                 run(f'sudo apt-get purge {package_name}')
+    elif cmd.startswith('loadext'):
+        args = cmd.split()
+        if len(args) < 2:
+            print('Please type extension name.')
+        else:
+            ename = args[1]
+            loadExtension(ename)
+
 # scripting laterrrr
     else:
         print(text.RED + "Invalid command.")
